@@ -1,0 +1,9 @@
+{
+    "data":[
+	{ "{#SSLNAME}": "site1.aarboard.ch", "{#PORT}":"443"},
+	{ "{#SSLNAME}": "site2.aarboard.ch", "{#PORT}":"443"},
+	{ "{#SSLNAME}": "site3.aarboard.ch", "{#PORT}":"443"},
+	{ "{#SSLNAME}": "site4.aarboard.ch", "{#PORT}":"443"},
+	{ "{#SSLNAME}": "site5.aarboard.ch", "{#PORT}":"443"}
+    ]
+}

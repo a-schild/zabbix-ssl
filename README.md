@@ -21,7 +21,7 @@ Supported check types
 * digestmode Hash algorithm (For example detect SHA1 certificates)
 
 ## How to install ##
-* Download the ssltls.check file to your Zabbix Server 
+* Download the ssltls.check file to your **Zabbix Server**
   external script directory (Or your proxy if the servers are behind a Zabbix proxy)
   For example ExternalScripts=/usr/lib/zabbix/externalscripts
 * Make it executable
@@ -30,9 +30,9 @@ Supported check types
 
 ### Additional setup required for SNI ###
 * Put the /etc/zabbix/zabbix_agentd.d/ssl-sites.conf in the config directory
-  of your client agent (The server where your sites reside)
+  of your **client agent** (The server where your sites reside)
 * Put the /etc/zabbix/ssl_sites.json in the config directory
-  of your client agent (The server where your sites reside)
+  of your **client agent** (The server where your sites reside)
   and modify the list of sites which should be checked.
   This is the list of certificates to check on this server
   Make sure it has a valid json syntax

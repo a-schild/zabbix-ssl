@@ -29,6 +29,8 @@ Supported check types
 * Assign the templates to the hosts you wish to monitor
 
 ### Additional setup required for SNI ###
+Only needed if you have multiple certificates on the same IP+Port
+
 * Put the /etc/zabbix/zabbix_agentd.d/ssl-sites.conf in the config directory
   of your **client agent** (The server where your sites reside)
 * Put the /etc/zabbix/ssl_sites.json in the config directory

@@ -407,7 +407,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>ssltls.check[{HOST.CONN}:993,IMAPS,digestmode]</key>
+                    <key>ssltls.check[{HOST.CONN}:993,native,digestmode]</key>
                     <delay>3600</delay>
                     <history>90</history>
                     <trends>365</trends>
@@ -450,7 +450,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>ssltls.check[{HOST.CONN}:993,IMAPS,enddate]</key>
+                    <key>ssltls.check[{HOST.CONN}:993,native,enddate]</key>
                     <delay>3600</delay>
                     <history>90</history>
                     <trends>365</trends>
@@ -493,7 +493,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>ssltls.check[{HOST.CONN}:993,IMAPS,simple]</key>
+                    <key>ssltls.check[{HOST.CONN}:993,native,simple]</key>
                     <delay>360</delay>
                     <history>90</history>
                     <trends>365</trends>
@@ -536,7 +536,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>ssltls.check[{HOST.CONN}:993,IMAPS,startdate]</key>
+                    <key>ssltls.check[{HOST.CONN}:993,native,startdate]</key>
                     <delay>3600</delay>
                     <history>90</history>
                     <trends>365</trends>
@@ -579,7 +579,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>ssltls.check[{HOST.CONN}:993,IMAPS,lifetime]</key>
+                    <key>ssltls.check[{HOST.CONN}:993,native,lifetime]</key>
                     <delay>3600</delay>
                     <history>90</history>
                     <trends>365</trends>
@@ -622,7 +622,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>ssltls.check[{HOST.CONN}:993,IMAPS,ssl3]</key>
+                    <key>ssltls.check[{HOST.CONN}:993,native,ssl3]</key>
                     <delay>360</delay>
                     <history>90</history>
                     <trends>365</trends>
@@ -2393,7 +2393,7 @@
             </dependencies>
         </trigger>
         <trigger>
-            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,digestmode].str(sha1)}=1</expression>
+            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,digestmode].str(sha1)}=1</expression>
             <name>IMAPS certificate is using sha1</name>
             <url/>
             <status>0</status>
@@ -2403,12 +2403,12 @@
             <dependencies>
                 <dependency>
                     <name>IMAPS SSL not running on host {HOST.NAME}</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,simple].last()}=0</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,simple].last()}=0</expression>
                 </dependency>
             </dependencies>
         </trigger>
         <trigger>
-            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,lifetime].last()}&lt;0</expression>
+            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,lifetime].last()}&lt;0</expression>
             <name>IMAPS certificate on {HOSTNAME} expired</name>
             <url/>
             <status>0</status>
@@ -2418,12 +2418,12 @@
             <dependencies>
                 <dependency>
                     <name>IMAPS SSL not running on host {HOST.NAME}</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,simple].last()}=0</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,simple].last()}=0</expression>
                 </dependency>
             </dependencies>
         </trigger>
         <trigger>
-            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,lifetime].last()}&lt;604800</expression>
+            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,lifetime].last()}&lt;604800</expression>
             <name>IMAPS certificate on {HOSTNAME} expires in less than 7 days</name>
             <url/>
             <status>0</status>
@@ -2433,16 +2433,16 @@
             <dependencies>
                 <dependency>
                     <name>IMAPS certificate on {HOSTNAME} expired</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,lifetime].last()}&lt;0</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,lifetime].last()}&lt;0</expression>
                 </dependency>
                 <dependency>
                     <name>IMAPS SSL not running on host {HOST.NAME}</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,simple].last()}=0</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,simple].last()}=0</expression>
                 </dependency>
             </dependencies>
         </trigger>
         <trigger>
-            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,lifetime].last()}&lt;3888000</expression>
+            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,lifetime].last()}&lt;3888000</expression>
             <name>IMAPS certificate on {HOSTNAME} expires in less than 45 days</name>
             <url/>
             <status>0</status>
@@ -2452,16 +2452,16 @@
             <dependencies>
                 <dependency>
                     <name>IMAPS certificate on {HOSTNAME} expires in less than 7 days</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,lifetime].last()}&lt;604800</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,lifetime].last()}&lt;604800</expression>
                 </dependency>
                 <dependency>
                     <name>IMAPS SSL not running on host {HOST.NAME}</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,simple].last()}=0</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,simple].last()}=0</expression>
                 </dependency>
             </dependencies>
         </trigger>
         <trigger>
-            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,lifetime].last()}&lt;7776000</expression>
+            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,lifetime].last()}&lt;7776000</expression>
             <name>IMAPS certificate on {HOSTNAME} expires in less than 90 days</name>
             <url/>
             <status>0</status>
@@ -2471,11 +2471,11 @@
             <dependencies>
                 <dependency>
                     <name>IMAPS certificate on {HOSTNAME} expires in less than 45 days</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,lifetime].last()}&lt;3888000</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,lifetime].last()}&lt;3888000</expression>
                 </dependency>
                 <dependency>
                     <name>IMAPS SSL not running on host {HOST.NAME}</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,simple].last()}=0</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,simple].last()}=0</expression>
                 </dependency>
             </dependencies>
         </trigger>
@@ -2515,7 +2515,7 @@
             </dependencies>
         </trigger>
         <trigger>
-            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,simple].last()}=0</expression>
+            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,simple].last()}=0</expression>
             <name>IMAPS SSL not running on host {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -3115,7 +3115,7 @@
             </dependencies>
         </trigger>
         <trigger>
-            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,ssl3].last()}=1</expression>
+            <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,ssl3].last()}=1</expression>
             <name>SSL certificate on {HOSTNAME} IMAPS ssl3 poodle vulnerable</name>
             <url/>
             <status>0</status>
@@ -3125,7 +3125,7 @@
             <dependencies>
                 <dependency>
                     <name>IMAPS SSL not running on host {HOST.NAME}</name>
-                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,IMAPS,simple].last()}=0</expression>
+                    <expression>{Template App IMAPS Service:ssltls.check[{HOST.CONN}:993,native,simple].last()}=0</expression>
                 </dependency>
             </dependencies>
         </trigger>

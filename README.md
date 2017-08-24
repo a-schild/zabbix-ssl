@@ -17,7 +17,8 @@ Supported check types
 * startdate Startdate of certificate
 * enddate   Enddate of certificate
 * lifetime  How long the certificate is valid
-* ssl3      SSLv3 active ? (Poodle vulnerable)
+* ssl3      SSLv3 active ? (Poodle vulnerable) 
+            This only works when your openssl binaries still have built in ssl3 support
 * digestmode Hash algorithm (For example detect SHA1 certificates)
 
 ## How to install ##
@@ -41,4 +42,4 @@ Only needed if you have multiple certificates on the same IP+Port
 * Restart the zabbix agent
 
 
-(C) 2016 André Schild <a.schild aarboard.ch>
+(C) 2017 André Schild <a.schild aarboard.ch>

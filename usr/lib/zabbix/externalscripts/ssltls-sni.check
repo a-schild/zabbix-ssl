@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # script: ssltls.check 
 # version: 1.3
@@ -126,6 +126,8 @@ fi
 LOC="POSIX"
 export LC_ALL=$LOC
 
+OSTYPE="$(uname)"
+
 # assign arguments to variables
 #
 HOST=$1 # IP:PORT or FQDN:PORT
@@ -194,9 +196,17 @@ case $CHECK_TYPE in
       exit 1
     else
     # certificate attribute received send it to zabbix, exit 0
+
+    if [[ "${OSTYPE}" = "FreeBSD" ]] || [[ "${OSTYPE}" = "Darwin" ]]; then
+      rdate="$($echo_bin $RETURN | cut -d= -f2)"
+      EXP_DATE=$(date -jf "%b %e %T %Y %Z" "$rdate" +%s); \
+      CUR_DATE=$(date -jf "%a %b %e %T %Z %Y" "`date`" +%s); \
+    else
       EXP_DATE=$(date --date="$($echo_bin $RETURN | cut -d= -f2)" +%s); \
       CUR_DATE=$(date --date="`date`" +%s); \
-      RETURN=$(($EXP_DATE-$CUR_DATE))
+    fi
+
+    RETURN=$(($EXP_DATE-$CUR_DATE))
       echo $RETURN
       exit 0
     fi

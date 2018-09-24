@@ -1,8 +1,7 @@
 #!/bin/bash
 #
 # script: ssltls.check 
-# version: 1.3
-# author: Andre Schild <a.schild aarboard.ch>
+# version: 1.0
 # author: Simon Kowallik <sk simonkowallik.com>
 # description: 
 # license: GPL2
@@ -14,7 +13,7 @@
 # As OpenSSL s_client also supports STARTTLS, ssltls.check supports it too. This means smtp pop3 imap ftp xmpp should
 # work with STARTTLS.
 #
-# This script is intended for use with Zabbix 2.0 and up
+# This script is intended for use with Zabbix 2.0
 #
 # REQUIRES:
 #  - bash
@@ -118,18 +117,24 @@
 
 # there need to be exactly 3 arguments, if not, exit 1 (error for console)
 if [ $# -ne 3 ]; then
-    echo "Invalid number of arguments"
-    echo "ssltls.check <ip:port> <tls-type> <check>"
-    echo "tls-type: native for HTTPS/SSL or smtp|pop3|imap|ftp|xmpp for STARTTLS"
  exit 1
 fi
 
-LOC="POSIX"
+LOC="en_GB.UTF8"
 export LC_ALL=$LOC
 
 # assign arguments to variables
 #
 HOST=$1 # IP:PORT or FQDN:PORT
+# ipv6 support:
+HOSTIPV6=$(echo $1 | sed -e 's/:[0-9]\+$//')
+if echo $HOSTIPV6 | grep -q :
+then
+    HOSTPORT=$(echo $1 | sed -e 's/.*:\([0-9]\+\)$/\1/')
+    HOST6="[$HOSTIPV6]:$HOSTPORT"
+else
+    HOST6=$HOST
+fi
 TLS_TYPE=$2 # native or proto (which means we use starttls)
 CHECK_TYPE=$3 # simple, lifetime, .., serial, .., issuer, ..
 
@@ -172,7 +177,7 @@ case $CHECK_TYPE in
     # what certificate attribute should we use to determine if SSL/TLS Handshake works?
     X509_OPT="-subject_hash"
     # execute command
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
     # process RETURN value
     if [ "$RETURN" == "" ]; then
     # no certificate received (no subject_hash) or other error (could not connect?) send 0 to zabbix, exit 1
@@ -186,7 +191,7 @@ case $CHECK_TYPE in
   ;;
   "lifetime")
     X509_OPT="-enddate"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -195,7 +200,9 @@ case $CHECK_TYPE in
     else
     # certificate attribute received send it to zabbix, exit 0
       EXP_DATE=$(date --date="$($echo_bin $RETURN | cut -d= -f2)" +%s); \
-      CUR_DATE=$(date --date="`date`" +%s); \
+      CUR_DATE=`date +%s`;
+	# echo 'Expdate: ' $EXP_DATE
+	# echo 'Now: ' $CUR_DATE
       RETURN=$(($EXP_DATE-$CUR_DATE))
       echo $RETURN
       exit 0
@@ -203,7 +210,7 @@ case $CHECK_TYPE in
   ;;
   "startdate")
     X509_OPT="-startdate"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -217,7 +224,7 @@ case $CHECK_TYPE in
   ;;
   "enddate")
     X509_OPT="-enddate"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -231,7 +238,7 @@ case $CHECK_TYPE in
   ;;
   "serial")
     X509_OPT="-serial"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -245,7 +252,7 @@ case $CHECK_TYPE in
   ;;
   "fingerprint")
     X509_OPT="-fingerprint"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -259,7 +266,7 @@ case $CHECK_TYPE in
   ;;
   "subject")
     X509_OPT="-subject"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -273,7 +280,7 @@ case $CHECK_TYPE in
   ;;
   "issuer")
     X509_OPT="-issuer"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -287,7 +294,7 @@ case $CHECK_TYPE in
   ;;
   "subject_hash")
     X509_OPT="-subject_hash"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -301,7 +308,7 @@ case $CHECK_TYPE in
   ;;
   "issuer_hash")
     X509_OPT="-issuer_hash"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -315,7 +322,7 @@ case $CHECK_TYPE in
   ;;
   "digestmode")
     X509_OPT="-text"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout  $X509_OPT  2>/dev/null | grep "Signature Algorithm")
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout  $X509_OPT  2>/dev/null | grep "Signature Algorithm")
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
@@ -329,9 +336,9 @@ case $CHECK_TYPE in
   ;;
   "ssl3")
     X509_OPT="-text"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS -ssl3 2>&1 >/dev/null | grep "handshake failure")
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS -ssl3 2>&1 >/dev/null | grep "handshake failure")
     searchString="sslv3 alert handshake failure"
-    searchString2="ssl handshake failure"
+    searchString=2"ssl handshake failure"
     if [ "$RETURN" == "" ]; then
     # connect OK, sslv3 active, bad
       echo "1"
@@ -354,7 +361,7 @@ case $CHECK_TYPE in
   ;;
   "template")
     X509_OPT="-"
-    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST6 $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null)
 
     if [ "$RETURN" == "" ]; then
     # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1

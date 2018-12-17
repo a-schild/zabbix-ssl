@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # script: ssltls.check 
 # version: 1.3
@@ -84,6 +84,9 @@
 #       * CHECK_TYPE: issuer_hash
 #	  Desc: Returns OpenSSL Certificate Hash of Issuer Certificate, example: 38d751eb
 #         Return type:hex
+#
+#       * CHECK_TYPE: sni
+#     Desc: SNI entries separated by space
 #
 # EXAMPLES:
 # Check if SSL/TLS Handshake works for SMTP Service on {HOST.IP} with smtp STARTTLS
@@ -197,7 +200,7 @@ case $CHECK_TYPE in
     else
     # certificate attribute received send it to zabbix, exit 0
 
-    if [[ "${OSTYPE}" = "FreeBSD" ]] || [[ "${OSTYPE}" = "Darwin" ]]; then
+    if [ "${OSTYPE}" = "FreeBSD" ] || [ "${OSTYPE}" = "Darwin" ]; then
       rdate="$($echo_bin $RETURN | cut -d= -f2)"
       EXP_DATE=$(date -jf "%b %e %T %Y %Z" "$rdate" +%s); \
       CUR_DATE=$(date -jf "%a %b %e %T %Z %Y" "`date`" +%s); \
@@ -278,6 +281,20 @@ case $CHECK_TYPE in
     else
     # certificate attribute received send it to zabbix, exit 0
       echo ${RETURN#subject= }
+      exit 0
+    fi
+  ;;
+  "sni")
+    X509_OPT="-text"
+    RETURN=$($echo_bin | $timeout_bin $TIMEOUT $OPENSSL s_client -connect $HOST -servername $SNIHOST $STARTTLS 2>/dev/null | $OPENSSL x509 -noout $X509_OPT 2>/dev/null | grep DNS: | sed 's/DNS:/ /g' | sed  's/,/ /g')
+
+    if [ "$RETURN" == "" ]; then
+    # no certificate attribute or other error (could not connect?) send 0 to zabbix, exit 1
+      echo ""
+      exit 1
+    else
+    # certificate attribute received send it to zabbix, exit 0
+      echo ${RETURN}
       exit 0
     fi
   ;;

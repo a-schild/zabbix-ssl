@@ -25,6 +25,8 @@ Supported check types
 * Download the ssltls.check file to your **Zabbix Server**
   external script directory (Or your proxy if the servers are behind a Zabbix proxy)
   For example ExternalScripts=/usr/lib/zabbix/externalscripts
+  * If your distribution uses the busybox timeout command, then you have to specify the -t parameter
+    in both script files (Change it to timeout_bin="/usr/bin/timeout -t ")
 * Make it executable
 * Import the templates for the different check types in your zabbix server
 * Assign the templates to the hosts you wish to monitor

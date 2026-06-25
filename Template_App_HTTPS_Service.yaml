@@ -1,0 +1,165 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+  - uuid: f3d62922ddb94a4a838b318d3f662fa5
+    name: Active Hosts
+  - uuid: 7df96b18c230490a9a0a9e2307226338
+    name: Templates
+  templates:
+  - uuid: aa767a9cee11402c9e4772c3f3259f39
+    template: Template App HTTPS Service
+    name: Template App HTTPS Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: 8642d0a4cca74409bb7afe4ed954c9d9
+      name: HTTPS service is running
+      type: SIMPLE
+      key: net.tcp.service[tcp,,443]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      description: Not https since we have a problem with libcurl in debian8 and Zabbix using TLS 1.0
+      tags:
+      - tag: Application
+        value: HTTPS service
+      triggers:
+      - uuid: c1b088bc3a6f434d89d2ace5ddd794f9
+        expression: max(/Template App HTTPS Service/net.tcp.service[tcp,,443],#3)=0
+        name: HTTPS service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: fab521f39ce4438390b0fe4d7d18fb52
+      name: SSL HTTPS certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:443,native,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: HTTPS service
+      triggers:
+      - uuid: a32f8fc2909b4f0b9f1dff4e93ff4c76
+        expression: find(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,digestmode],,"like","sha1")=1 or find(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,digestmode],,"like","md5")=1
+        name: HTTPS uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 5c289289e87c4a11b453b9fd51ff9b7f
+      name: SSL HTTPS certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:443,native,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: HTTPS service
+    - uuid: e3f6345e6d5c4f97871f5c0509988d03
+      name: SSL HTTPS certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:443,native,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: HTTPS service
+      triggers:
+      - uuid: da51d757773e42dab0bfcb28a80dd1bf
+        expression: last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime])<0
+        name: HTTPS certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: dafcbb14fa334fb8800af2fe6d98df80
+        expression: last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime])<604800 and last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime])>0
+        name: HTTPS certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: 9bc71db5bc1143a695b6957f94695289
+        expression: last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime])<1296000 and last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime])>604800
+        name: HTTPS certificate on {HOST.NAME} expires in less than 15 days
+        priority: AVERAGE
+      - uuid: 83b7483eec864a218d0e6e0bef20522f
+        expression: last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime])<2505600 and last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime])>1296000
+        name: HTTPS certificate on {HOST.NAME} expires in less than 29 days
+        priority: WARNING
+      - uuid: e90371929af94107bbed1c287056e0fb
+        expression: nodata(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,lifetime],2h)=1
+        name: HTTPS certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: 7cebba2b618e4a4d8290ae65982b7bcf
+      name: SSL HTTPS certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:443,native,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: HTTPS service
+      triggers:
+      - uuid: 33250eb68ca2466f83dced0212ba7435
+        expression: last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,simple])=0
+        name: HTTPS SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: 031ee244c68d410b8d6e0cd50c50250c
+      name: SSL HTTPS sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:443,native,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: HTTPS service
+      triggers:
+      - uuid: 86e9e766c312463c80ca6eb2bc796ad9
+        expression: last(/Template App HTTPS Service/ssltls.check[{HOST.CONN}:443,native,ssl3])=1
+        name: HTTPS ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: 663c0c44f93e4c11bf754e95557278fd
+      name: SSL HTTPS certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:443,native,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: HTTPS service
+    valuemaps:
+    - uuid: 5cc45ff6e7f74639a8e4435eabc51a14
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  graphs:
+  - uuid: 2186a49309e44a2b940ff553df5d34d2
+    name: HTTPS certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App HTTPS Service
+        key: ssltls.check[{HOST.CONN}:443,native,lifetime]

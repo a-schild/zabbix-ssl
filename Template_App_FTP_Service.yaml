@@ -1,0 +1,164 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+  - uuid: f3d62922ddb94a4a838b318d3f662fa5
+    name: Active Hosts
+  - uuid: 7df96b18c230490a9a0a9e2307226338
+    name: Templates
+  templates:
+  - uuid: 31e1bf8c73c04baaab671849b12026f7
+    template: Template App FTP Service
+    name: Template App FTP Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: 3771c4be0f2e4eb28637be9887614d73
+      name: FTP service is running
+      type: ZABBIX_ACTIVE
+      key: net.tcp.listen[21]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      tags:
+      - tag: Application
+        value: FTP service
+      triggers:
+      - uuid: 30dad5fc54bb40c99772bac7da4dec2f
+        expression: max(/Template App FTP Service/net.tcp.listen[21],#3)=0
+        name: FTP service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 5d0d6dd79b554a8eb1918c889cf32fa5
+      name: SSL FTP certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:21,ftp,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: FTP service
+      triggers:
+      - uuid: 7e09a944bd4a4458914d83e7b99429a6
+        expression: find(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,digestmode],,"like","sha1")=1 or find(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,digestmode],,"like","md5")=1
+        name: FTP uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: ec20de3269ae4aca96b0129b8e5b9346
+      name: SSL FTP certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:21,ftp,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: FTP service
+    - uuid: b8287ce51f48445fbd918b5d3f1ea2f7
+      name: SSL FTP certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:21,ftp,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: FTP service
+      triggers:
+      - uuid: 2b33475103874237a3f96091e0841be3
+        expression: last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime])<0
+        name: FTP certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: af65cf131bd7404fa24e640438b3ee5f
+        expression: last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime])<604800 and last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime])>0
+        name: FTP certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: d28582bc7c204961a88395c658b5340c
+        expression: last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime])<1296000 and last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime])>604800
+        name: FTP certificate on {HOST.NAME} expires in less than 15 days
+        priority: AVERAGE
+      - uuid: c22ee627df1f4b9ea329a8aeeac464e1
+        expression: last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime])<2505600 and last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime])>1296000
+        name: FTP certificate on {HOST.NAME} expires in less than 29 days
+        priority: WARNING
+      - uuid: 67c3169c4c944ec7bc1aa3539a3d1142
+        expression: nodata(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,lifetime],2h)=1
+        name: FTP certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: 95a3dbaf388e420d915ab563a32164fe
+      name: SSL FTP certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:21,ftp,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: FTP service
+      triggers:
+      - uuid: 0c47182a8c14480d9b5a885e77a205f6
+        expression: last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,simple])=0
+        name: FTP SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: d472e709494f42cbb7368c69e26507b8
+      name: SSL FTP sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:21,ftp,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: FTP service
+      triggers:
+      - uuid: 90936c25368f420d885a6248d1d404d6
+        expression: last(/Template App FTP Service/ssltls.check[{HOST.CONN}:21,ftp,ssl3])=1
+        name: FTP ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: 100f2662c0154cce96a5bff8495a27ef
+      name: SSL FTP certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:21,ftp,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: FTP service
+    valuemaps:
+    - uuid: d08719f5e0bc44429768847aa0658658
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  graphs:
+  - uuid: bd0227f07d934470af91e13ab6839834
+    name: FTP certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App FTP Service
+        key: ssltls.check[{HOST.CONN}:21,ftp,lifetime]

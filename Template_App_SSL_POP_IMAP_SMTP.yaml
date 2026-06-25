@@ -1,0 +1,1011 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+  - uuid: f3d62922ddb94a4a838b318d3f662fa5
+    name: Active Hosts
+  - uuid: 7df96b18c230490a9a0a9e2307226338
+    name: Templates
+  templates:
+  - uuid: 435b4c1ce44f4935a54c27e5d749f880
+    template: Template App IMAP Service
+    name: Template App IMAP Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: 7c1dd3d763ce4623b9366a0ec6126240
+      name: IMAP service performance
+      type: SIMPLE
+      key: net.tcp.service.perf[imap]
+      delay: 1m
+      history: 1w
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: IMAP service
+    - uuid: 9afdbd9c0d3d471e88fc7f7583b4eb11
+      name: IMAP service is running
+      type: SIMPLE
+      key: net.tcp.service[imap]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      tags:
+      - tag: Application
+        value: IMAP service
+      triggers:
+      - uuid: f9de74280a924f5ea77a011c963ea67e
+        expression: max(/Template App IMAP Service/net.tcp.service[imap],#3)=0
+        name: IMAP service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 9c73396d071f486397d210dc39f938b4
+      name: SSL IMAP certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:143,imap,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: IMAP service
+      triggers:
+      - uuid: 588fdc206ef147f298c8b2a4e11c2635
+        expression: find(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,digestmode],,"like","sha1")=1 or find(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,digestmode],,"like","md5")=1
+        name: IMAP uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 417c0a727ced4ca8892ff778b84f5aa6
+      name: SSL IMAP certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:143,imap,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: IMAP service
+    - uuid: 02b9a1220e1f4b808ea0650ef67b2700
+      name: SSL IMAP certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:143,imap,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: IMAP service
+      triggers:
+      - uuid: 2f3075c877314bb6b0a541bfae8c9f48
+        expression: last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime])<0
+        name: IMAP certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: 334b2ea474f545a9b4f793027a4c363a
+        expression: last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime])<604800 and last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime])>0
+        name: IMAP certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: 406bc5fc3b3a43e6b82e7b0899273c18
+        expression: last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime])<3888000 and last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime])>604800
+        name: IMAP certificate on {HOST.NAME} expires in less than 45 days
+        priority: AVERAGE
+      - uuid: 82d5171a28954ac08847ab563c05ad86
+        expression: last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime])<7776000 and last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime])>3888000
+        name: IMAP certificate on {HOST.NAME} expires in less than 90 days
+        priority: WARNING
+      - uuid: 7eb7dffdc5444d6e9aa0a99cc52b5199
+        expression: nodata(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,lifetime],2h)=1
+        name: IMAP certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: 0df315aa7327417dbb21522ac2a74449
+      name: SSL IMAP certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:143,imap,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: IMAP service
+      triggers:
+      - uuid: 461a1cb803fd4c759ed0c946835ad9d5
+        expression: last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,simple])=0
+        name: IMAP SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: f357d6fd513b462f99860b7248798f90
+      name: SSL IMAP sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:143,imap,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: IMAP service
+      triggers:
+      - uuid: 8ee7e40689ca48b89da0a850b7e44030
+        expression: last(/Template App IMAP Service/ssltls.check[{HOST.CONN}:143,imap,ssl3])=1
+        name: IMAP ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: 92f2a8ba788f4780aacdfd618f5ae548
+      name: SSL IMAP certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:143,imap,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: IMAP service
+    valuemaps:
+    - uuid: 03137245a86f41e2a79057c5d8a917d7
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  - uuid: 24466256972b45dca53bfe1b210f77b9
+    template: Template App IMAPS Service
+    name: Template App IMAPS Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: 0d1dd79801cb46bfb385b0cbcc942f61
+      name: IMAPS service performance
+      type: SIMPLE
+      key: net.tcp.service.perf[tcp,,993]
+      delay: 1m
+      history: 1w
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: IMAPS service
+    - uuid: 3003c884a4514ffc9a6a94414d7ecd3c
+      name: IMAPS service is running
+      type: SIMPLE
+      key: net.tcp.service[tcp,,993]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      tags:
+      - tag: Application
+        value: IMAPS service
+      triggers:
+      - uuid: 597c98140368480996076bf9e1fc792c
+        expression: max(/Template App IMAPS Service/net.tcp.service[tcp,,993],#3)=0
+        name: IMAPS service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: c3c22e92ec9b4f8287be6ff286df2912
+      name: SSL IMAPS certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:993,native,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: IMAPS service
+      triggers:
+      - uuid: 271c815e3ef0455dad1d5d2f362a1fac
+        expression: find(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,digestmode],,"like","sha1")=1 or find(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,digestmode],,"like","md5")=1
+        name: IMAPS uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 177ab1a0df174349b4014f7a84d58fe0
+      name: SSL IMAPS certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:993,native,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: IMAPS service
+    - uuid: 51e92e167c0348ceac62be85658b6323
+      name: SSL IMAPS certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:993,native,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: IMAPS service
+      triggers:
+      - uuid: 7a430a36bc16481b86cf02a33d761b15
+        expression: last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime])<0
+        name: IMAPS certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: 01581757ba284646bc25c0d82ab75b8f
+        expression: last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime])<604800 and last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime])>0
+        name: IMAPS certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: 33e6aafd16f84449829b2d498d45cbd0
+        expression: last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime])<1296000 and last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime])>604800
+        name: IMAPS certificate on {HOST.NAME} expires in less than 15 days
+        priority: AVERAGE
+      - uuid: 50615c66f72846e1ab5913613059c5b2
+        expression: last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime])<2505600 and last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime])>1296000
+        name: IMAPS certificate on {HOST.NAME} expires in less than 29 days
+        priority: WARNING
+      - uuid: 4d52bb977f0c403bb8eaf203306706d9
+        expression: nodata(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,lifetime],2h)=1
+        name: IMAPS certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: fb3457f2194a4512ab1b5d262ceddf89
+      name: SSL IMAPS certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:993,native,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: IMAPS service
+      triggers:
+      - uuid: 9ebe08f4581543279791970106a3360a
+        expression: last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,simple])=0
+        name: IMAPS SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: 691545e1929d4c36bf5a49d69675b20b
+      name: SSL IMAPS sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:993,native,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: IMAPS service
+      triggers:
+      - uuid: a7f6f297b72949008e5f02164877e14c
+        expression: last(/Template App IMAPS Service/ssltls.check[{HOST.CONN}:993,native,ssl3])=1
+        name: IMAPS ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: 7d257da74c9a4c05abde0a1457a04d50
+      name: SSL IMAPS certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:993,native,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: IMAPS service
+    valuemaps:
+    - uuid: 22be3095e3ab45e8bd6eb28958ecc0b7
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  - uuid: 246902b01a4e4bf19b67b9b072074cb5
+    template: Template App POP3 Service
+    name: Template App POP3 Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: cd1b0726d15a409fa0e43869ae8a8baa
+      name: POP3 service performance
+      type: SIMPLE
+      key: net.tcp.service.perf[pop]
+      delay: 1m
+      history: 1w
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: POP3 service
+    - uuid: 8d9b4ac4b9ad4b7aa2811d33f6d8cd4b
+      name: POP3 service is running
+      type: SIMPLE
+      key: net.tcp.service[pop]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      tags:
+      - tag: Application
+        value: POP3 service
+      triggers:
+      - uuid: 3c065c1005d0499d9d8f5a1be8a214dc
+        expression: max(/Template App POP3 Service/net.tcp.service[pop],#3)=0
+        name: POP3 service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 92e4705b826e49128e35513a6c0298f3
+      name: SSL POP3 certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:110,pop3,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: POP3 service
+      triggers:
+      - uuid: db29bf3f52494af18068f072ad280d1d
+        expression: find(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,digestmode],,"like","sha1")=1 or find(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,digestmode],,"like","md5")=1
+        name: POP3 uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 38f2a32adcbc4893b61dcbb316854f46
+      name: SSL POP3 certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:110,pop3,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: POP3 service
+    - uuid: 4206a9f52b8d4dc6a5cd3922571ed21e
+      name: SSL POP3 certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:110,pop3,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: POP3 service
+      triggers:
+      - uuid: f9b616d5c165485c936761376bb07161
+        expression: last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime])<0
+        name: POP3 certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: fbd7e748736147ff911b6a2a791ab033
+        expression: last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime])<604800 and last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime])>0
+        name: POP3 certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: 82d037fa8e3b4bf5895f20d518cc9cfc
+        expression: last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime])<3888000 and last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime])>604800
+        name: POP3 certificate on {HOST.NAME} expires in less than 45 days
+        priority: AVERAGE
+      - uuid: 65ad0ec840ec4c36aeda48f9c8abc322
+        expression: last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime])<7776000 and last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime])>3888000
+        name: POP3 certificate on {HOST.NAME} expires in less than 90 days
+        priority: WARNING
+      - uuid: 4f3a280c876e49a7a9840d7fcfa44e2e
+        expression: nodata(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,lifetime],2h)=1
+        name: POP3 certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: c6c6493d6a114e6da577ef0539b34fc1
+      name: SSL POP3 certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:110,pop3,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: POP3 service
+      triggers:
+      - uuid: bb10e1e842ab482791db42b9a43715cb
+        expression: last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,simple])=0
+        name: POP3 SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: 2d0b3c57725f446dbf45d091c298cf5e
+      name: SSL POP3 sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:110,pop3,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: POP3 service
+      triggers:
+      - uuid: 786a60746c4e4a3da3cfd4f007f781db
+        expression: last(/Template App POP3 Service/ssltls.check[{HOST.CONN}:110,pop3,ssl3])=1
+        name: POP3 ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: 450cc1b219b040db81fb239e65eff54b
+      name: SSL POP3 certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:110,pop3,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: POP3 service
+    valuemaps:
+    - uuid: f13e563e178d4693a9b4d13573f75125
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  - uuid: b162aab45b16477abf1ca7a7e206162a
+    template: Template App POP3S Service
+    name: Template App POP3S Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: c1569b7bce9148a9ab6611dcd42b9545
+      name: POP3S service performance
+      type: SIMPLE
+      key: net.tcp.service.perf[tcp,,995]
+      delay: 1m
+      history: 1w
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: POP3S service
+    - uuid: c270b6f7d6b34452a08f718e8af56c45
+      name: POP3S service is running
+      type: SIMPLE
+      key: net.tcp.service[tcp,,995]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      tags:
+      - tag: Application
+        value: POP3S service
+      triggers:
+      - uuid: c9d7a6bd76b94ed69ab7317f90a5be2e
+        expression: max(/Template App POP3S Service/net.tcp.service[tcp,,995],#3)=0
+        name: POP3S service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 6765e50231094609bee87dc618bf87b7
+      name: SSL POP3S certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:995,native,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: POP3S service
+      triggers:
+      - uuid: 4b37095f1290464ca47bca2bb2f38e0c
+        expression: find(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,digestmode],,"like","sha1")=1 or find(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,digestmode],,"like","md5")=1
+        name: POP3S uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 0a326fc8c0734738802947e851fdc6db
+      name: SSL POP3S certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:995,native,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: POP3S service
+    - uuid: 55315d3f63f447ef966126962d89aeec
+      name: SSL POP3S certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:995,native,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: POP3S service
+      triggers:
+      - uuid: 8f5530ad178a42fcb38747321903ee83
+        expression: last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime])<0
+        name: POP3S certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: 65f3ef983e1944ba8e430e7a8d8c2948
+        expression: last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime])<604800 and last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime])>0
+        name: POP3S certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: 027d99670bef4b298e9ea00404487cad
+        expression: last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime])<1296000 and last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime])>604800
+        name: POP3S certificate on {HOST.NAME} expires in less than 15 days
+        priority: AVERAGE
+      - uuid: 2a6fe6e91ff943a4ba0a1f7538482473
+        expression: last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime])<2505600 and last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime])>1296000
+        name: POP3S certificate on {HOST.NAME} expires in less than 29 days
+        priority: WARNING
+      - uuid: 667ff8765f964a5b845e8d76ee8d2b31
+        expression: nodata(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,lifetime],2h)=1
+        name: POP3S certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: dc3c63486ce3463f8ea4535b565f4e24
+      name: SSL POP3S certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:995,native,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: POP3S service
+      triggers:
+      - uuid: 32e5afdb27a84b6db4f8697602501dc0
+        expression: last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,simple])=0
+        name: POP3S SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: e1b369d82147488fbc6619d903f5d191
+      name: SSL POP3S sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:995,native,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: POP3S service
+      triggers:
+      - uuid: d0021446660347bf8c9f4be80aaf3f3c
+        expression: last(/Template App POP3S Service/ssltls.check[{HOST.CONN}:995,native,ssl3])=1
+        name: POP3S ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: cbfa9d5862384ec8bff04228a336ae87
+      name: SSL POP3S certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:995,native,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: POP3S service
+    valuemaps:
+    - uuid: cc9afe02b6cf4411826fad3cf9d3bdf2
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  - uuid: 3b87e0a912af4d6c831cb0b4408123e7
+    template: Template App SMTP Service
+    name: Template App SMTP Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: d9ef529f6cf942a4924439e6ae982985
+      name: SMTP service performance
+      type: SIMPLE
+      key: net.tcp.service.perf[smtp]
+      delay: 1m
+      history: 1w
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: SMTP service
+    - uuid: ee4afd22b29e41518e9f268ef3ba9652
+      name: SMTP service is running
+      type: SIMPLE
+      key: net.tcp.service[smtp]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      tags:
+      - tag: Application
+        value: SMTP service
+      triggers:
+      - uuid: 0f34a6873e204562b9fb8cb96515e4bd
+        expression: max(/Template App SMTP Service/net.tcp.service[smtp],#3)=0
+        name: SMTP service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: ff18fe880a3a43f8873269f2dabf504a
+      name: SSL SMTP certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:25,smtp,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: SMTP service
+      triggers:
+      - uuid: 2a2563fb72e747b3ac48a1af59c7150d
+        expression: find(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,digestmode],,"like","sha1")=1 or find(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,digestmode],,"like","md5")=1
+        name: SMTP uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 4e59809349c54d24a98a6720cc389ce1
+      name: SSL SMTP certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:25,smtp,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: SMTP service
+    - uuid: 6c687d7e04d94669982feeab655c253d
+      name: SSL SMTP certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:25,smtp,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: SMTP service
+      triggers:
+      - uuid: 3d8f484e02884438b1528993d3bd48a9
+        expression: last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime])<0
+        name: SMTP certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: ed859812ac6d462a9794f27f75a7941a
+        expression: last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime])<604800 and last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime])>0
+        name: SMTP certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: ddbd6a40c54c4ec2b5892998102e59b1
+        expression: last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime])<3888000 and last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime])>604800
+        name: SMTP certificate on {HOST.NAME} expires in less than 45 days
+        priority: AVERAGE
+      - uuid: 3a8cf3cf36cb489999e0a35f1b2ebe59
+        expression: last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime])<7776000 and last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime])>3888000
+        name: SMTP certificate on {HOST.NAME} expires in less than 90 days
+        priority: WARNING
+      - uuid: a953843cc94d4f04863c1e8efa6859e6
+        expression: nodata(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,lifetime],2h)=1
+        name: SMTP certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: af5fa91a9c604e719bb19d421ad59f89
+      name: SSL SMTP certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:25,smtp,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: SMTP service
+      triggers:
+      - uuid: cf4bfa74ac63421c95fa857e3a44f96c
+        expression: last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,simple])=0
+        name: SMTP SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: 03c79d2dccab4e458e6bd4461385e712
+      name: SSL SMTP sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:25,smtp,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: SMTP service
+      triggers:
+      - uuid: 5247ced6a0f14884a2b6e68e7ffb0eb8
+        expression: last(/Template App SMTP Service/ssltls.check[{HOST.CONN}:25,smtp,ssl3])=1
+        name: SMTP ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: e4fc52a985d74cfba855aa08f3b01a34
+      name: SSL SMTP certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:25,smtp,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: SMTP service
+    valuemaps:
+    - uuid: 0ca9de935fa1493fb3715f87428cdce5
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  - uuid: 0bfdeb2f7316404daff7bb813854f596
+    template: Template App SMTPS Service
+    name: Template App SMTPS Service
+    description: https://github.com/a-schild/zabbix-ssl/
+    groups:
+    - name: Active Hosts
+    - name: Templates
+    items:
+    - uuid: 5472e9182460488b91d3b2ab538e76ea
+      name: SMTPS service performance
+      type: SIMPLE
+      key: net.tcp.service.perf[tcp,,465]
+      delay: 1m
+      history: 1w
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: SMTPS service
+    - uuid: 267c0a4fbd1c437abfa1b60d5ae97f98
+      name: SMTPS service is running
+      type: SIMPLE
+      key: net.tcp.service[tcp,,465]
+      delay: 1m
+      history: 1w
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      tags:
+      - tag: Application
+        value: SMTPS service
+      triggers:
+      - uuid: 1e1bce64933642edae33486dde9eda64
+        expression: max(/Template App SMTPS Service/net.tcp.service[tcp,,465],#3)=0
+        name: SMTPS service is down on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 493439532f604e2092f78cf13f76c8a8
+      name: SSL SMTPS certificate digest mode
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:465,native,digestmode]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: SMTPS service
+      triggers:
+      - uuid: d6dbaa4858a6469ebec48e27d59e29b1
+        expression: find(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,digestmode],,"like","sha1")=1 or find(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,digestmode],,"like","md5")=1
+        name: SMTPS uses weak certificate signature (SHA1/MD5) on {HOST.NAME}
+        priority: AVERAGE
+    - uuid: 54e6c5b755e14e628dab8bfcac92752f
+      name: SSL SMTPS certificate end date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:465,native,enddate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: SMTPS service
+    - uuid: bde4db4df9154e04960a012f6a9f3782
+      name: SSL SMTPS certificate time until expire
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:465,native,lifetime]
+      delay: 1h
+      history: 90d
+      value_type: FLOAT
+      units: s
+      trends: 365d
+      tags:
+      - tag: Application
+        value: SMTPS service
+      triggers:
+      - uuid: f071eeb11bb143e7ac2526a6e04db137
+        expression: last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime])<0
+        name: SMTPS certificate on {HOST.NAME} expired
+        priority: DISASTER
+      - uuid: 7a010e2eccf547cc863e7bbdda21feda
+        expression: last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime])<604800 and last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime])>0
+        name: SMTPS certificate on {HOST.NAME} expires in less than 7 days
+        priority: HIGH
+      - uuid: 4033f4ce177d4807ac23b7854b258f02
+        expression: last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime])<1296000 and last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime])>604800
+        name: SMTPS certificate on {HOST.NAME} expires in less than 15 days
+        priority: AVERAGE
+      - uuid: e52f97ca9d774bdb83aa4a1ecddbd032
+        expression: last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime])<2505600 and last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime])>1296000
+        name: SMTPS certificate on {HOST.NAME} expires in less than 29 days
+        priority: WARNING
+      - uuid: 904b7343190f4483b69cfe9a377949e0
+        expression: nodata(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,lifetime],2h)=1
+        name: SMTPS certificate check returned no data on {HOST.NAME}
+        priority: INFO
+    - uuid: 557c6a20537748d593e4aee439a7fb47
+      name: SSL SMTPS certificate running
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:465,native,simple]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      valuemap:
+        name: Service state
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: SMTPS service
+      triggers:
+      - uuid: 79fd6419464542b781dd5ec1c12f42f2
+        expression: last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,simple])=0
+        name: SMTPS SSL not running on {HOST.NAME}
+        priority: HIGH
+    - uuid: df035d998c054e9a871586548121270c
+      name: SSL SMTPS sslv3 poodle vulnerable
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:465,native,ssl3]
+      delay: 1h
+      history: 90d
+      value_type: UNSIGNED
+      trends: 365d
+      status: DISABLED
+      preprocessing:
+      - type: BOOL_TO_DECIMAL
+        parameters:
+        - ''
+      tags:
+      - tag: Application
+        value: SMTPS service
+      triggers:
+      - uuid: e007cca4a721421a98050ac9a5f356ea
+        expression: last(/Template App SMTPS Service/ssltls.check[{HOST.CONN}:465,native,ssl3])=1
+        name: SMTPS ssl3 poodle vulnerable on {HOST.NAME}
+        priority: WARNING
+    - uuid: ffd9b4313c0b4232a9427a3883d97570
+      name: SSL SMTPS certificate start date
+      type: EXTERNAL
+      key: ssltls.check[{HOST.CONN}:465,native,startdate]
+      delay: 1h
+      history: 90d
+      value_type: CHAR
+      trends: '0'
+      tags:
+      - tag: Application
+        value: SMTPS service
+    valuemaps:
+    - uuid: 6c19bb20e9f44dc899556bae18fd4ee5
+      name: Service state
+      mappings:
+      - value: '0'
+        newvalue: Down
+      - value: '1'
+        newvalue: Up
+  graphs:
+  - uuid: ffe41bb7468c4690bb85c4730512948f
+    name: IMAP certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App IMAP Service
+        key: ssltls.check[{HOST.CONN}:143,imap,lifetime]
+  - uuid: e193fe7cd8544baaa734582589182b45
+    name: IMAPS certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App IMAPS Service
+        key: ssltls.check[{HOST.CONN}:993,native,lifetime]
+  - uuid: 4e985ad3fcf84ace83502bc9b1e040ec
+    name: POP3 certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App POP3 Service
+        key: ssltls.check[{HOST.CONN}:110,pop3,lifetime]
+  - uuid: 3d7d8cee779645bd8cc35c89d52cae26
+    name: POP3S certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App POP3S Service
+        key: ssltls.check[{HOST.CONN}:995,native,lifetime]
+  - uuid: 9ec989f2c58f4bb180726983f35bb842
+    name: SMTP certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App SMTP Service
+        key: ssltls.check[{HOST.CONN}:25,smtp,lifetime]
+  - uuid: 0268caed2ff14a00bd1615cffcfc4162
+    name: SMTPS certificate time until expire
+    graph_items:
+    - color: 1A7C11
+      item:
+        host: Template App SMTPS Service
+        key: ssltls.check[{HOST.CONN}:465,native,lifetime]

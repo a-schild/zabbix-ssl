@@ -1,0 +1,272 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: f3d62922ddb94a4a838b318d3f662fa5
+      name: 'Active Hosts'
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: b64de8ad45d740fd81c1266e923e724e
+      template: 'Template App HTTPS Service Autodiscovery'
+      name: 'Template App HTTPS Service Autodiscovery'
+      description: 'https://github.com/a-schild/zabbix-ssl/'
+      groups:
+        - name: 'Active Hosts'
+        - name: Templates
+      items:
+        - uuid: 317bdd88519141ed9f7076b5346d320f
+          name: 'HTTPS service is running'
+          type: ZABBIX_ACTIVE
+          key: 'net.tcp.service[https]'
+          history: 1w
+          valuemap:
+            name: 'Service state'
+          tags:
+            - tag: Application
+              value: 'HTTPS service'
+          triggers:
+            - uuid: cfe6a74d561647e3aaf5c92220ad7375
+              expression: 'max(/Template App HTTPS Service Autodiscovery/net.tcp.service[https],#3)=0'
+              name: 'HTTPS service is down on {HOST.NAME}'
+              priority: AVERAGE
+      discovery_rules:
+        - uuid: 79115d23a5684c7ebcf370b821d53c21
+          name: 'HTTPS sites'
+          key: ssl.sites
+          delay: 1h
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: bd3464965cff4c28a489135cd95fb4e5
+              name: 'HTTPS certificate digest mode {#SSLNAME}'
+              type: EXTERNAL
+              key: 'ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,digestmode]'
+              delay: 1h
+              history: 90d
+              value_type: CHAR
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'HTTPS service'
+                - tag: Certificate
+                  value: '{#SSLNAME}'
+            - uuid: 12b07775d94042e48a3def9bc70c46ac
+              name: 'HTTPS certificate end date {#SSLNAME}'
+              type: EXTERNAL
+              key: 'ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,enddate]'
+              delay: 1h
+              history: 90d
+              value_type: CHAR
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'HTTPS service'
+                - tag: Certificate
+                  value: '{#SSLNAME}'
+            - uuid: 201fb1f4e1f446f6a0e019d9301d3209
+              name: 'HTTPS certificate time until expire {#SSLNAME}'
+              type: EXTERNAL
+              key: 'ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime]'
+              delay: 1h
+              history: 90d
+              value_type: FLOAT
+              units: s
+              tags:
+                - tag: Application
+                  value: 'HTTPS service'
+                - tag: Certificate
+                  value: '{#SSLNAME}'
+              trigger_prototypes:
+                - uuid: a8a859d03bc74b9498b344d3d5f4b5a0
+                  expression: 'last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime])<0'
+                  name: 'HTTPS expired for {#SSLNAME}'
+                  priority: DISASTER
+                - uuid: 1d41a136b33b414896df4081fcc8aa98
+                  expression: |
+                    last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime])<604800
+                    and
+                    last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime])>0
+                  name: 'HTTPS expires in less than 7 days for {#SSLNAME}'
+                  priority: HIGH
+                - uuid: 78e5836438ef48acacc5caa7483a7a1e
+                  expression: |
+                    last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime])<3888000
+                    and
+                    last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime])>604800
+                  name: 'HTTPS expires in less than 45 days for {#SSLNAME}'
+                  priority: AVERAGE
+                - uuid: 68ad21a4dc4c483b9b0dcd50cdfab220
+                  expression: |
+                    last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime])<7776000
+                    and
+                    last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime])>3888000
+                  name: 'HTTPS expires in less than 90 days for {#SSLNAME}'
+                  priority: WARNING
+                - uuid: 5f64ea45f0e841698e18cb0df4d007d8
+                  expression: 'nodata(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime],2h)=1'
+                  name: 'HTTPS certificate check returned no data for {#SSLNAME}'
+                  priority: INFO
+            - uuid: f7683772f3084dc285985093c354cabe
+              name: 'HTTPS service running {#SSLNAME}'
+              type: EXTERNAL
+              key: 'ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,simple]'
+              delay: 1h
+              history: 90d
+              valuemap:
+                name: 'Service state'
+              preprocessing:
+                - type: BOOL_TO_DECIMAL
+                  parameters:
+                    - ''
+              tags:
+                - tag: Application
+                  value: 'HTTPS service'
+                - tag: Certificate
+                  value: '{#SSLNAME}'
+              trigger_prototypes:
+                - uuid: 79d83412ee2545328c5d77d0b9e081a7
+                  expression: 'last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,simple])=0'
+                  name: 'HTTPS not running for {#SSLNAME}'
+                  priority: HIGH
+            - uuid: 7b2fdfbd5010442c9a9ae812094543ac
+              name: 'HTTPS sslv3 poodle vulnerable {#SSLNAME}'
+              type: EXTERNAL
+              key: 'ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,ssl3]'
+              delay: 1h
+              history: 90d
+              status: DISABLED
+              preprocessing:
+                - type: BOOL_TO_DECIMAL
+                  parameters:
+                    - ''
+              tags:
+                - tag: Application
+                  value: 'HTTPS service'
+                - tag: Certificate
+                  value: '{#SSLNAME}'
+              trigger_prototypes:
+                - uuid: 5d7bc27dd56f48dfb10891654112e980
+                  expression: 'last(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,ssl3])=1'
+                  name: 'HTTPS ssl3 poodle vulnerable for {#SSLNAME}'
+                  priority: WARNING
+            - uuid: 08ed824ef4454eed9ca92e4347163938
+              name: 'HTTPS certificate start date {#SSLNAME}'
+              type: EXTERNAL
+              key: 'ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,startdate]'
+              delay: 1h
+              history: 90d
+              value_type: CHAR
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'HTTPS service'
+                - tag: Certificate
+                  value: '{#SSLNAME}'
+          trigger_prototypes:
+            - uuid: 4d200d48914e4b9a8bce7e4d8a8b325f
+              expression: |
+                find(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,digestmode],,"like","sha1")=1
+                or
+                find(/Template App HTTPS Service Autodiscovery/ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,digestmode],,"like","md5")=1
+              name: 'HTTPS uses weak certificate signature (SHA1/MD5) for {#SSLNAME}'
+              priority: AVERAGE
+          graph_prototypes:
+            - uuid: 09aee9d34baa422388eedcd796133804
+              name: 'HTTPS certificate lifetime: {#SSLNAME}'
+              graph_items:
+                - color: 1A7C11
+                  item:
+                    host: 'Template App HTTPS Service Autodiscovery'
+                    key: 'ssltls-sni.check[{#SSLNAME}:{#PORT},{#SSLNAME},native,lifetime]'
+      valuemaps:
+        - uuid: d9293e1292554c03b07c2051ea55517a
+          name: 'Service state'
+          mappings:
+            - value: '0'
+              newvalue: Down
+            - value: '1'
+              newvalue: Up
+      dashboards:
+        - uuid: 26243e354d6c460d9c01cd21402104a9
+          name: 'Certificates overview'
+          pages:
+            - name: Certificates
+              widgets:
+                - type: item
+                  name: 'HTTPS service status'
+                  width: '72'
+                  height: '2'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Template App HTTPS Service Autodiscovery'
+                        key: 'net.tcp.service[https]'
+                    - type: INTEGER
+                      name: show.0
+                      value: '2'
+                    - type: INTEGER
+                      name: show.1
+                      value: '3'
+                - type: honeycomb
+                  name: 'Certificate time until expiry'
+                  'y': '2'
+                  width: '72'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: items.0
+                      value: 'HTTPS certificate time until expire *'
+                    - type: INTEGER
+                      name: primary_label_type
+                      value: '0'
+                    - type: STRING
+                      name: primary_label
+                      value: '{{ITEM.NAME}.regsub("expire (.+)", \1)}'
+                    - type: INTEGER
+                      name: secondary_label_type
+                      value: '1'
+                    - type: STRING
+                      name: secondary_label
+                      value: '{ITEM.LASTVALUE}'
+                    - type: INTEGER
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E45959
+                    - type: INTEGER
+                      name: thresholds.1.threshold
+                      value: '604800'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC859
+                    - type: INTEGER
+                      name: thresholds.2.threshold
+                      value: '3888000'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: 5CB85C
+                    - type: STRING
+                      name: reference
+                      value: CERTS
+                - type: graphprototype
+                  name: 'Certificate lifetime (countdown to expiry)'
+                  'y': '8'
+                  width: '72'
+                  height: '12'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Template App HTTPS Service Autodiscovery'
+                        name: 'HTTPS certificate lifetime: {#SSLNAME}'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                    - type: INTEGER
+                      name: rows
+                      value: '2'
